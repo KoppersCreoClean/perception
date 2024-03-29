@@ -2,7 +2,6 @@ import cv2
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 from pycocotools import mask as mask_utils
 
-
 sam = sam_model_registry["vit_h"](checkpoint="/home/teama24/Desktop/yahuja/CreoClean/sam_vit_h_4b8939.pth")
 mask_generator = SamAutomaticMaskGenerator(sam)
 image = cv2.imread("./data/images/test1.jpg")

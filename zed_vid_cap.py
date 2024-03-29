@@ -60,5 +60,5 @@ def main(output_svo_file):
             print("Frame count: " + str(frames_recorded), end="\r")
     
 if __name__ == "__main__":
-    output_svo_file = "output.svo"
+    output_svo_file = "../data/output.svo"
     main(output_svo_file)

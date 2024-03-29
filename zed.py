@@ -69,7 +69,7 @@ def main():
                     
                     print(f"Depth at {x}, {y}: {get_depth(x, y, point_cloud)}")
                     # depth_map.set_value(x, y, depth(x, y, point_cloud)) 
-            exit()
+            # exit()
             cv2.imwrite(str(i)+"_depth_map.jpg", depth_map.get_data())
             i += 1
 

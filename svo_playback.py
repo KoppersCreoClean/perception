@@ -110,8 +110,8 @@ if __name__ == "__main__":
     # if not opt.input_svo_file.endswith(".svo"): 
     #     print("--input_svo_file parameter should be a .svo file but is not : ",opt.input_svo_file,"Exit program.")
     #     exit()
-    input_svo_file = "output.svo"
-    output_dir = "./png_output"
+    input_svo_file = "../data/output.svo"
+    output_dir = "../data/png_output"
     # if not os.path.isfile(opt.input_svo_file):
     #     print("--input_svo_file parameter should be an existing file but is not : ",opt.input_svo_file,"Exit program.")
     #     exit()
