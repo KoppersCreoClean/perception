@@ -16,7 +16,7 @@ def count_blocks(video_path, model_path):
     line_points = [(20, 400), (1080, 400)]
 
     # Video writer
-    video_writer = cv2.VideoWriter("object_counting_output.avi",
+    video_writer = cv2.VideoWriter("../../data/object_counting_output.avi",
                         cv2.VideoWriter_fourcc(*'mp4v'),
                         fps,
                         (w, h))
@@ -38,8 +38,6 @@ def count_blocks(video_path, model_path):
 
         im0 = counter.start_counting(im0, tracks)
         video_writer.write(im0)
-
-    print("Total count: ", counter.total_count)
 
     cap.release()
     video_writer.release()
