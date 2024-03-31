@@ -9,8 +9,6 @@ class creoSegmenter:
                  segmentation_method="bw_thresholding", # method to segment the image
                  creo_threshold=50, # threshold for semi (grey) pixels
                  clean_threshold=170, # threshold for clean (white) pixels
-                 image_path=None, # path to the image
-                 mask_path=None, # path to the mask image
                  kernel_size=5, # kernel size for dilation and erosion [5/3]
                  kernel_iterations=3): # number of iterations for dilation and erosion [5/3/1]
         
@@ -18,8 +16,6 @@ class creoSegmenter:
         self.segmentation_method = segmentation_method
         self.creo_threshold = creo_threshold
         self.clean_threshold = clean_threshold
-        self.image_path = image_path
-        self.mask_path = mask_path
         self.kernel_size = kernel_size
         self.kernel = np.ones((self.kernel_size, self.kernel_size), np.uint8)
         self.kernel_iterations = kernel_iterations
@@ -33,11 +29,12 @@ class creoSegmenter:
         return cv2.erode(image, self.kernel, iterations=3)
     
     # preprocess the image/mask
-    def preprocess_image(self, img):
-        if len(img.shape) == 3:
+    def preprocess_image(self, img, if_mask=False):
+        if len(img.shape) == 3 and if_mask == False:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         img = cv2.resize(img, (600, 1000))
-        img = self.erode_image(img)
+        if not if_mask:
+            img = self.erode_image(img)
         return img
     
     # find true positives, false positives, and false negatives in two binary images
@@ -60,16 +57,22 @@ class creoSegmenter:
         return binary_creo_mask, binary_semi_mask, binary_clean_mask                
         
     # apply the bw thresholding to the image to get the different regions
-    def bw_thresholding_image(self, image):
+    def bw_thresholding_image(self, image, visualize=False):
         creo_region = cv2.inRange(image, 0, self.creo_threshold)
         semi_creo_region = cv2.inRange(image, self.creo_threshold, self.clean_threshold)
         clean_region = cv2.inRange(image, self.clean_threshold, 255)
+        if visualize:
+            cv2.imshow("Creo Region", creo_region)
+            cv2.imshow("Semi Creo Region", semi_creo_region)
+            cv2.imshow("Clean Region", clean_region)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
         return creo_region, semi_creo_region, clean_region
     
     # apply the otus thresholding to the image
-    def otu_thresholding_mask(self, mask):
-        mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-        _, thresholded = cv2.threshold(mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    def otu_thresholding(self, image):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        _, thresholded = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         return thresholded
 
     # TODO: implement the segmentation methods
@@ -94,6 +97,7 @@ class creoSegmenter:
         avg_metric_values = {"creo": 0, "semi": 0, "clean": 0}
         
         switcher = {
+            "naive_accuracy": naive_accuracy,
             "precision": precision,
             "recall": recall,
             "f1_score": f1_score,
@@ -102,13 +106,20 @@ class creoSegmenter:
         }
         metric_function = switcher.get(evaluation_method, "Invalid metric")
         
-        for i in range(number_of_images):
+        count_creo = 0
+        count_semi = 0
+        count_clean = 0
+        i = 1
+        while i <= number_of_images:
 
-            image = cv2.imread(image_dir + "/test_" + str(i) + ".jpg")
-            mask = cv2.imread(mask_dir + "/test_" + str(i) + ".jpg")
+            image = cv2.imread(image_dir + "/test" + str(i) + ".jpg")
+            mask = cv2.imread(mask_dir + "/test" + str(i) + ".jpg")
+
             image = self.preprocess_image(image)
-            mask = self.preprocess_image(mask)
+            mask = self.preprocess_image(mask, if_mask=True)
+            
             creo_mask, semi_mask, clean_mask = self.get_masks(mask)
+            # exit()
             if visualize:
                 cv2.imshow("Creo Mask", creo_mask)
                 cv2.imshow("Semi Mask", semi_mask)
@@ -134,13 +145,28 @@ class creoSegmenter:
 
             # calculate and add the metric value for each region
             avg_metric_values["creo"] += metric_function(creo_metrics)
+            if metric_function(creo_metrics) != 0:
+                count_creo += 1
             avg_metric_values["semi"] += metric_function(semi_metrics)
+            if metric_function(semi_metrics) != 0:
+                count_clean += 1
             avg_metric_values["clean"] += metric_function(clean_metrics)
+            if metric_function(clean_metrics) != 0:
+                count_semi += 1
+
+            i += 1
+
+        if count_clean == 0:
+            count_clean = 1
+        if count_semi == 0:
+            count_semi = 1
+        if count_creo == 0:
+            count_creo = 1
 
         # calculate the average metric value for each region
-        avg_metric_values["creo"] /= number_of_images
-        avg_metric_values["semi"] /= number_of_images
-        avg_metric_values["clean"] /= number_of_images
+        avg_metric_values["creo"] /= count_creo
+        avg_metric_values["semi"] /= count_semi
+        avg_metric_values["clean"] /= count_clean
 
         print("Average "+evaluation_method+" for Creo Region: ", avg_metric_values["creo"])
         print("Average "+evaluation_method+" for Semi Region: ", avg_metric_values["semi"])
@@ -152,7 +178,7 @@ class creoSegmenter:
     def get_segmentations(self, image):
         image = self.preprocess_image(image)
         if self.segmentation_method == "bw_thresholding":
-            return self.bw_thresholding_image(image)
+            return self.bw_thresholding_image(image, visualize=True)
         elif self.segmentation_method == "otu_thresholding":
             return self.otu_thresholding_mask(image)
         elif self.segmentation_method == "hsv_segmentation":
