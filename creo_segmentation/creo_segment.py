@@ -84,12 +84,21 @@ class creoSegmenter:
         pass
 
     # get location of the top/left most pixel of the creo region and translate to real world coordinates
-    def get_creo_location(self, image):
+    def get_creo_location(self, image, intrinsics, lambda_=0.6): # no intrinsic matrix because we need coords in camera frame
+
         image = self.preprocess_image(image)
         creo_region, _, _ = self.bw_thresholding_image(image)
-        creo_location = np.where(creo_region == 255)
-        # TODO: implement the conversion of pixel location to real world coordinates
-        return creo_location[0][0], creo_location[1][0] # return the top/left most pixel of the creo region
+        creo_locations = np.where(creo_region == 255)
+        creo_location = [creo_locations[0][0], creo_locations[1][0]]
+        
+        # conversion of pixel location to real world coordinates
+        creo_location_in_camera_frame = [
+            lambda_ * (creo_location[0] - intrinsics["cy"]) / intrinsics["fy"],
+            lambda_ * (creo_location[1] - intrinsics["cx"]) / intrinsics["fx"],
+            lambda_
+        ]
+        
+        return creo_location_in_camera_frame
 
     # evaluate the performance of the segmentation
     def evaluate_segmentation(self, image_dir, mask_dir, number_of_images, evaluation_method="precision", visualize=False):

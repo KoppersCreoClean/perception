@@ -50,6 +50,10 @@ if __name__ == "__main__":
     parser.add_argument('--video_path', type=str, required=False, help='Path to the video', default='../../data/output.avi')
     args = parser.parse_args()
 
+    # TODO: Check on streamed video
+    # TODO: Output the count of blocks as integer
+    # TODO: Set it up as a ros node
+
     try:
         if args.video_path is None:
             print("Invalid video path")
