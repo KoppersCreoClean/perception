@@ -6,17 +6,23 @@ import pyzed.sl as sl
 
 def main():
     # Create a Camera object
-    zed = sl.Camera()
+    # zed = sl.Camera()
 
     # Create a InitParameters object and set configuration parameters
-    init_params = sl.InitParameters()
-    init_params.camera_resolution = sl.RESOLUTION.AUTO # Use HD720 opr HD1200 video mode, depending on camera type.
-    init_params.camera_fps = 30  # Set fps at 30
+    
 
     init = sl.InitParameters(depth_mode=sl.DEPTH_MODE.ULTRA,
                                  coordinate_units=sl.UNIT.METER,
                                  coordinate_system=sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP)
-
+    
+    zed = sl.Camera()
+    init_params = sl.InitParameters()
+    init_params.camera_resolution = sl.RESOLUTION.AUTO # Use HD720 opr HD1200 video mode, depending on camera type.
+    init_params.camera_fps = 30  # Set fps at 30
+    init_params.coordinate_units = sl.UNIT.METER
+    init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP
+    init_params.depth_mode = sl.DEPTH_MODE.ULTRA  # Use ULTRA depth mode
+    
     # Open the camera
     err = zed.open(init_params)
     if err != sl.ERROR_CODE.SUCCESS:
