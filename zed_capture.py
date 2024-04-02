@@ -27,7 +27,7 @@ def main():
     depth_map = sl.Mat()    
     point_cloud = sl.Mat()
     runtime_parameters = sl.RuntimeParameters()
-    while i < 1:
+    while i < 13:
         # Grab an image, a RuntimeParameters object must be given to grab()
         if zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
             # A new image is available if grab() returns SUCCESS
