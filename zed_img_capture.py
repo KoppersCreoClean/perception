@@ -18,9 +18,9 @@ while True :
     # Extract left and right images from side-by-side
     left_right_image = numpy.split(frame, 2, axis=1)
     # Display images
-    cv2.imshow("frame", frame)
+    # cv2.imshow("frame", frame)
     # cv2.imshow("right", left_right_image[0])
-    # cv2.imshow("left", left_right_image[1])
+    cv2.imshow("left", left_right_image[1])
     if cv2.waitKey(30) >= 0 :
         break
 
