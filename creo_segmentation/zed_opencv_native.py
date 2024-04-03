@@ -1,9 +1,35 @@
-import cv2
-import numpy as np
-from creo_segment import creoSegmenter
-import configparser
-import argparse
+'''
+///////////////////////////////////////////////////////////////////////////
+//
+// Copyright (c) 2018, STEREOLABS.
+//
+// All rights reserved.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+///////////////////////////////////////////////////////////////////////////
 
+/*****************************************************************************************
+ ** This sample demonstrates how to capture stereo images and calibration parameters    **
+ ** from the ZED camera with OpenCV without using the ZED SDK.                          **
+ *****************************************************************************************/
+'''
+
+import numpy as np
+import os
+import configparser
+import sys
+import cv2
 
 def init_calibration(calibration_file, image_size) :
 
@@ -96,103 +122,40 @@ class Resolution :
     width = 1280
     height = 720
 
-# def main() :
-#     # Open the ZED camera
-#     cap = cv2.VideoCapture(4)
-#     if cap.isOpened() == 0:
-#         exit(-1)
+def main() :
+    # Open the ZED camera
+    cap = cv2.VideoCapture(4)
+    if cap.isOpened() == 0:
+        exit(-1)
 
-#     image_size = Resolution()
-#     image_size.width = 1280
-#     image_size.height = 720
-
-    # # Set the video resolution to HD720
-    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, image_size.width*2)
-    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, image_size.height)
-
-    # calibration_file = "zed_calibration.conf"
-
-    # camera_matrix_left, camera_matrix_right, map_left_x, map_left_y, map_right_x, map_right_y = init_calibration(calibration_file, image_size)
-
-    # while True :
-    #     # Get a new frame from camera
-    #     retval, frame = cap.read()
-    #     # Extract left and right images from side-by-side
-    #     left_right_image = np.split(frame, 2, axis=1)
-    #     # Display images
-
-    #     left_rect = cv2.remap(left_right_image[0], map_left_x, map_left_y, interpolation=cv2.INTER_LINEAR)
-    #     right_rect = cv2.remap(left_right_image[1], map_right_x, map_right_y, interpolation=cv2.INTER_LINEAR)
-
-    #     cv2.imshow("left RECT", left_rect)
-    #     cv2.imshow("right RECT", right_rect)
-    #     if cv2.waitKey(30) >= 0 :
-    #         break
-
-    # exit(0)
-
-
-def main():
-
-    # TODO: Consolidate as a ros node
-
-    segmenter = creoSegmenter()
-    
     image_size = Resolution()
-    
-    intrinsics_zedL = {
-        "fx": 1.3995,
-        "fy": 1.3995,
-        "cx": 1.16865,
-        "cy": 0.64013
-    }
-    
+    image_size.width = 1280
+    image_size.height = 720
+
+    # Set the video resolution to HD720
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, image_size.width*2)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, image_size.height)
+
     calibration_file = "zed_calibration.conf"
 
-    # camera_matrix_left, camera_matrix_right, map_left_x, map_left_y, map_right_x, map_right_y = init_calibration(calibration_file, image_size)
+    camera_matrix_left, camera_matrix_right, map_left_x, map_left_y, map_right_x, map_right_y = init_calibration(calibration_file, image_size)
 
-    # evaluating the segmentation model    
-    # segmenter.evaluate_segmentation("../.",#"../../data/creo_segmentation/images",
-    #                                 "../.",#"../../data/creo_segmentation/masks",
-    #                                 13,
-    #                                 evaluation_method="accuracy", 
-    #                                 visualize=False)
-    
-    # running the creo segmentation model on real-time camera feed
-    # image, _ = zed_cap_image()
-    for i in range(0, 6):
-        # print(i)
-        image = cv2.imread("../left_" + str(i) + ".jpg")
-        # cv2.imshow("image", image)
-        image_size.width, image_size.height = image.shape[1], image.shape[0]
-        camera_matrix_left, camera_matrix_right, map_left_x, map_left_y, map_right_x, map_right_y = init_calibration(calibration_file, image_size)
-        image = cv2.remap(image, map_left_x, map_left_y, interpolation=cv2.INTER_LINEAR)
-        # cv2.imshow("rectified image", image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # segmenter.get_segmentations(image, visualize=True)
-        
-    # while True :
-    #     # Get a new frame from camera
-    #     retval, frame = cap.read()
-    #     # Extract left and right images from side-by-side
-    #     left_right_image = np.split(frame, 2, axis=1)
-    #     # Display images
+    while True :
+        # Get a new frame from camera
+        retval, frame = cap.read()
+        # Extract left and right images from side-by-side
+        left_right_image = np.split(frame, 2, axis=1)
+        # Display images
 
-    #     left_rect = cv2.remap(left_right_image[0], map_left_x, map_left_y, interpolation=cv2.INTER_LINEAR)
-    #     right_rect = cv2.remap(left_right_image[1], map_right_x, map_right_y, interpolation=cv2.INTER_LINEAR)
+        left_rect = cv2.remap(left_right_image[0], map_left_x, map_left_y, interpolation=cv2.INTER_LINEAR)
+        right_rect = cv2.remap(left_right_image[1], map_right_x, map_right_y, interpolation=cv2.INTER_LINEAR)
 
-    #     cv2.imshow("left RECT", left_rect)
-    #     cv2.imshow("right RECT", right_rect)
-    #     if cv2.waitKey(30) >= 0 :
-    #         break
-        
-        # segmenter.get_segmentations(image, visualize=True)
+        cv2.imshow("left RECT", left_rect)
+        cv2.imshow("right RECT", right_rect)
+        if cv2.waitKey(30) >= 0 :
+            break
 
-    # running the creo segmentation model on a single image to get the creo location
-    
-        location = segmenter.get_creo_location(image, intrinsics_zedL)
-        print(location)
+    exit(0)
 
 if __name__ == "__main__":
     main()
