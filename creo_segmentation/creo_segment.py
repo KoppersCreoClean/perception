@@ -29,16 +29,21 @@ class creoSegmenter:
         result_planes = []
         result_norm_planes = []
         for plane in rgb_planes:
-            dilated_img = cv2.dilate(plane, np.ones((5,5), np.uint8))
-            bg_img = cv2.medianBlur(dilated_img, 11)
+            # dilated_img = cv2.dilate(plane, np.ones((5,5), np.uint8))
+            bg_img = cv2.medianBlur(img, 19)
             diff_img = 255 - cv2.absdiff(plane, bg_img)
             norm_img = cv2.normalize(diff_img, None, alpha=255, beta=0, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
             result_planes.append(diff_img)
             result_norm_planes.append(norm_img)
-            
+
         result = cv2.merge(result_planes)
         result_norm = cv2.merge(result_norm_planes)
-        return result, result_norm
+        delta_intensity = np.mean(img) - np.mean(result_norm)
+        
+        # print("Delta Intensity: ", delta_intensity)
+        # exit()
+
+        return result, result_norm, delta_intensity
         
     # Dilation of image 
     def dilate_image(self, image, kernel=None, iterations=None):
@@ -60,7 +65,7 @@ class creoSegmenter:
     def preprocess_image(self, img, x = 100, y = 50, w = 450, h = 700, if_mask=False, if_crop=True): # crop is tuned for this specific dataset and position
         if len(img.shape) == 3 and if_mask == False:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        img = cv2.resize(img, (600, 1000))
+        # img = cv2.resize(img, (600, 1000))
         if if_crop:
             img = img[y:y+h, x:x+w]
         if not if_mask:
@@ -100,6 +105,7 @@ class creoSegmenter:
         return creo_region, semi_creo_region, clean_region
     
      # apply the bw thresholding to the image to get the different regions
+    
     def bw_adaptive_thresholding_image(self, image, block_size=11, constant=5, visualize=False):
         creo_region = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, block_size, constant)
         creo_region = self.dilate_image(creo_region, kernel=np.ones((5, 5), np.uint8), iterations=2) # tuned for this dataset
@@ -109,68 +115,34 @@ class creoSegmenter:
             cv2.destroyAllWindows()
         return creo_region
     
-    def multi_otsu_thresholding(self, image, visualize=False):
-        _, image = self.remove_shadows(image)
+    def multi_otsu_thresholding(self, image_, visualize=False):
+        _, image, delta_intensity = self.remove_shadows(image_)
+        # cv2.imshow("Image", image)
         thresholds = skimage.filters.threshold_multiotsu(image, classes=3)
+        # thresholds += int(delta_intensity)
         # print("Thresholds: ", thresholds, len(thresholds), type(thresholds), type(thresholds[0]))
         regions = np.digitize(image, bins=thresholds)
         # print("Thresholds: ", thresholds)
         # print("Regions: ", regions, regions.shape, regions.dtype)
         
-        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 3.5))
-
-        # Plotting the original image.
-        # Applying multi-Otsu threshold for the default value, generating
-        # three classes.
-        # thresholds = threshold_multiotsu(image)
-
-        # Using the threshold values, we generate the three regions.
-        # regions = np.digitize(image, bins=thresholds)
-
-        # fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(10, 3.5))
-
-        # Plotting the original image.
-        # ax[0].imshow(image, cmap='gray')
-        # ax[0].set_title('Original')
-        # ax[0].axis('off')
-
-        # Plotting the histogram and the two thresholds obtained from
-        # multi-Otsu.
-        # ax[1].hist(image.ravel(), bins=255)
-        # ax[1].set_title('Histogram')
-        # for thresh in thresholds:
-        #     ax[1].axvline(thresh, color='r')
-
-        # Plotting the Multi Otsu result.
-        # ax[2].imshow(regions, cmap='jet')
-        # ax[2].set_title('Multi-Otsu result')
-        # ax[2].axis('off')
+        # fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 3.5))
         
         creo_region = cv2.inRange(image, 0, int(thresholds[0]))
-        semi_creo_region = cv2.inRange(image, int(thresholds[0]), int(thresholds[1])) + creo_region
+        semi_creo_region = cv2.inRange(image, int(thresholds[0]), int(thresholds[1])) #+ creo_region
         clean_region = cv2.inRange(image, int(thresholds[1]), 255)
+        # cv2.imshow("Creo Region", creo_region)
+
         if visualize:
+            cv2.imshow("Original-Unfiltered Image", image_)
+            cv2.imshow("Original Image", image)
             cv2.imshow("Creo Region", creo_region)
             cv2.imshow("Semi Creo Region", semi_creo_region)
             cv2.imshow("Clean Region", clean_region)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
         return creo_region, semi_creo_region, clean_region
-        
-        print(regions.shape, regions.dtype, type(regions))
-        
-        
-        # plt.subplots_adjust()
-        # plt.show()
-
-
-        # if visualize:
-        #     cv2.imshow("Thresholded", regions)
-        #     cv2.waitKey(0)
-        #     cv2.destroyAllWindows()
-        return regions
     
-    # apply the otus thresholding to the image
+    # apply the otus thresholding to the imaqe
     def otsu_thresholding(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         _, thresholded = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -186,11 +158,50 @@ class creoSegmenter:
 
     # get location of the top/left most pixel of the creo region and translate to real world coordinates
     def get_creo_location(self, image, intrinsics, lambda_=0.6): # no intrinsic matrix because we need coords in camera frame
-
+        
+        cv2.imshow("Original Image", image)
         image = self.preprocess_image(image)
         creo_region, _, _ = self.multi_otsu_thresholding(image)
+        # creo_region = 255 - creo_region
+        
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5, 5))
+        dilated = cv2.dilate(creo_region, kernel, iterations=5)
+        # _, cnts, _ = cv2.findContours(dilated.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # # cnts = sorted(cnts, key = cv2.contourArea, reverse = True)[:1]
+        # # screenCnt = None
+
+        # # loop over our contours
+        # for c in cnts:
+        #     # approximate the contour
+        #     peri = cv2.arcLength(c, True)
+        #     approx = cv2.approxPolyDP(c, 0.3 * peri, True)
+
+        #     cv2.drawContours(creo_region, [cnts[0]], -1, (0, 255, 0), 2)
+            
+        # exit()
+        
+        
+        # img_canny = cv2.Canny(creo_region, 50, 50)
+        # img_dilate = cv2.dilate(img_canny, None, iterations=1)
+        # img_erode = cv2.erode(img_dilate, None, iterations=1)
+
+        # mask = np.full(creo_region.shape, 255, "uint8")
+        # contours, hierarchies = cv2.findContours(img_erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        # for cnt in contours:
+        #     cv2.drawContours(mask, [cnt], -1, 0, -1)
+            
+        # cv2.imshow("result", dilated)
+        # # cv2.waitKey(0)
+        # # creo_region = 255 - creo_region
+        # cv2.imshow("Creo Region", creo_region)
+        
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
         # creo_locations = np.where(creo_region == 255)
-        height, width = creo_region.shape[:2]
+        # print("Creo Locations: ", creo_locations)
+        # print("Creo Locations Shape: ", creo_locations[0].shape)
+        # exit()
+        height, width = dilated.shape[:2]
         for y in range(height - 1, -1, -1):  # Iterate over rows in reverse order
             for x in range(width - 1, -1, -1):  # Iterate over columns in reverse order
                 if creo_region[y, x] == 255:  # Check if pixel value is white (255)
@@ -207,6 +218,8 @@ class creoSegmenter:
             lambda_ * (creo_location[1] - intrinsics["cx"]) / intrinsics["fx"],
             lambda_
         ]
+        # print("Creo Location in Camera Frame: ", creo_location_in_camera_frame)
+        # exit()
         
         return creo_location_in_camera_frame
 
@@ -231,10 +244,10 @@ class creoSegmenter:
         i = 1
         while i <= number_of_images:
 
-            # image = cv2.imread(image_dir + "/test" + str(i) + ".jpg")
-            # mask = cv2.imread(mask_dir + "/test" + str(i) + ".jpg")
-            image = cv2.imread(image_dir + "/left_" + str(i) + ".jpg")
-            mask = cv2.imread(mask_dir + "/left_" + str(i) + ".jpg")
+            image = cv2.imread(image_dir + "/test" + str(i) + ".jpg")
+            mask = cv2.imread(mask_dir + "/test" + str(i) + ".jpg")
+            # image = cv2.imread(image_dir + "/left_" + str(i) + ".jpg")
+            # mask = cv2.imread(mask_dir + "/left_" + str(i) + ".jpg")
             
             image = self.preprocess_image(image)
             mask = self.preprocess_image(mask, if_mask=True)
@@ -247,7 +260,7 @@ class creoSegmenter:
                 cv2.imshow("Clean Mask", clean_mask)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
-            creo_region, semi_creo_region, clean_region = self.bw_thresholding_image(image)
+            creo_region, semi_creo_region, clean_region = self.multi_otsu_thresholding(image)#self.bw_thresholding_image(image)
             if visualize:
                 cv2.imshow("Creo Region", creo_region)
                 cv2.imshow("Semi Creo Region", semi_creo_region)

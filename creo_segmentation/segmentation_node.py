@@ -152,21 +152,21 @@ def main():
     # camera_matrix_left, camera_matrix_right, map_left_x, map_left_y, map_right_x, map_right_y = init_calibration(calibration_file, image_size)
 
     # evaluating the segmentation model    
-    # segmenter.evaluate_segmentation("../.",#"../../data/creo_segmentation/images",
-    #                                 "../.",#"../../data/creo_segmentation/masks",
-    #                                 13,
+    # segmenter.evaluate_segmentation("../../data/creo_segmentation/images",
+    #                                 "../../data/creo_segmentation/masks",
+    #                                 2,
     #                                 evaluation_method="accuracy", 
     #                                 visualize=False)
     
     # running the creo segmentation model on real-time camera feed
     # image, _ = zed_cap_image()
-    for i in range(0, 6):
-        # print(i)
-        image = cv2.imread("../left_" + str(i) + ".jpg")
-        # cv2.imshow("image", image)
-        image_size.width, image_size.height = image.shape[1], image.shape[0]
-        camera_matrix_left, camera_matrix_right, map_left_x, map_left_y, map_right_x, map_right_y = init_calibration(calibration_file, image_size)
-        image = cv2.remap(image, map_left_x, map_left_y, interpolation=cv2.INTER_LINEAR)
+    # for i in range(0, 6):
+    #     # print(i)
+    #     image = cv2.imread("../left_" + str(i) + ".jpg")
+    #     # cv2.imshow("image", image)
+    #     image_size.width, image_size.height = image.shape[1], image.shape[0]
+    #     camera_matrix_left, camera_matrix_right, map_left_x, map_left_y, map_right_x, map_right_y = init_calibration(calibration_file, image_size)
+    #     image = cv2.remap(image, map_left_x, map_left_y, interpolation=cv2.INTER_LINEAR)
         # cv2.imshow("rectified image", image)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
@@ -190,9 +190,9 @@ def main():
         # segmenter.get_segmentations(image, visualize=True)
 
     # running the creo segmentation model on a single image to get the creo location
-    
-        location = segmenter.get_creo_location(image, intrinsics_zedL)
-        print(location)
+    image = cv2.imread("../left_0.jpg")
+    location = segmenter.get_creo_location(image, intrinsics_zedL)
+    print(location)
 
 if __name__ == "__main__":
     main()
