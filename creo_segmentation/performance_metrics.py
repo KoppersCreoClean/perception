@@ -1,7 +1,6 @@
 # Description: This file contains the implementation of the performance metrics used to evaluate the performance of the model.
 
-# TODO: make sure not to divide by zero in the performance metrics (make them 1)
-# and also make sure to not include the absent cases in performance calculations
+# TODO: make sure to not include the absent cases (ground truth number = 0) in performance calculations
 
 def preprocess_cf_list(cf_list):
     [true_positives, true_negatives, false_positives, false_negatives] = cf_list
@@ -28,10 +27,9 @@ def recall(cf_list):
     return true_positives / (true_positives + false_negatives)
 
 def f1_score(cf_list):
-    true_positives, _, false_positives, false_negatives = preprocess_cf_list(cf_list)
-    precision = precision(true_positives, false_positives)
-    recall = recall(true_positives, false_negatives)
-    return 2 * (precision * recall) / (precision + recall)
+    precision_ = precision(cf_list=cf_list)
+    recall_ = recall(cf_list=cf_list)
+    return 2 * (precision_ * recall_) / (precision_ + recall_)
 
 def iou(cf_list):
     true_positives, _, false_positives, false_negatives = preprocess_cf_list(cf_list)

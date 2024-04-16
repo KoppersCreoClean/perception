@@ -152,47 +152,38 @@ def main():
     # camera_matrix_left, camera_matrix_right, map_left_x, map_left_y, map_right_x, map_right_y = init_calibration(calibration_file, image_size)
 
     # evaluating the segmentation model    
-    # segmenter.evaluate_segmentation("../../data/creo_segmentation/images",
-    #                                 "../../data/creo_segmentation/masks",
-    #                                 2,
-    #                                 evaluation_method="accuracy", 
+    segmenter.evaluate_segmentation("../../data/creo_segmentation_super/images",
+                                    "../../data/creo_segmentation_super/masks",
+                                    20,
+                                    visualize=False)
+            
+    # segmenter.evaluate_segmentation("../",
+    #                                 "../",
+    #                                 6,
     #                                 visualize=False)
-    
+
     # running the creo segmentation model on real-time camera feed
-    # image, _ = zed_cap_image()
-    # for i in range(0, 6):
-    #     # print(i)
-    #     image = cv2.imread("../left_" + str(i) + ".jpg")
-    #     # cv2.imshow("image", image)
-    #     image_size.width, image_size.height = image.shape[1], image.shape[0]
-    #     camera_matrix_left, camera_matrix_right, map_left_x, map_left_y, map_right_x, map_right_y = init_calibration(calibration_file, image_size)
-    #     image = cv2.remap(image, map_left_x, map_left_y, interpolation=cv2.INTER_LINEAR)
-        # cv2.imshow("rectified image", image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # segmenter.get_segmentations(image, visualize=True)
+    # for i in range(14, 20):
+    #     print(i)
+    #     if i in [14, 15, 16, 17, 18, 19, 20]:
+    #         image = cv2.imread("../../data/creo_segmentation_super/images/test" + str(i) + ".png")
+    #     else:
+    #         image = cv2.imread("../../data/creo_segmentation_super/images/test" + str(i) + ".jpg")
         
-    # while True :
-    #     # Get a new frame from camera
-    #     retval, frame = cap.read()
-    #     # Extract left and right images from side-by-side
-    #     left_right_image = np.split(frame, 2, axis=1)
-    #     # Display images
-
-    #     left_rect = cv2.remap(left_right_image[0], map_left_x, map_left_y, interpolation=cv2.INTER_LINEAR)
-    #     right_rect = cv2.remap(left_right_image[1], map_right_x, map_right_y, interpolation=cv2.INTER_LINEAR)
-
-    #     cv2.imshow("left RECT", left_rect)
-    #     cv2.imshow("right RECT", right_rect)
-    #     if cv2.waitKey(30) >= 0 :
-    #         break
-        
+        # image_size.width, image_size.height = image.shape[1], image.shape[0]
+        # camera_matrix_left, camera_matrix_right, map_left_x, map_left_y, map_right_x, map_right_y = init_calibration(calibration_file, image_size)
+        # image = cv2.remap(image, map_left_x, map_left_y, interpolation=cv2.INTER_LINEAR)
         # segmenter.get_segmentations(image, visualize=True)
 
     # running the creo segmentation model on a single image to get the creo location
-    image = cv2.imread("../left_0.jpg")
-    location = segmenter.get_creo_location(image, intrinsics_zedL)
-    print(location)
+    # image = cv2.imread("../../data/creo_segmentation_super/images/test21.jpg")
+    # location = segmenter.get_creo_location(image, intrinsics_zedL)
+    # print(location)
 
 if __name__ == "__main__":
+    # TODO: figure out the usage of shadow removal in the pipeline
+    # TODO: improve the performance metrics: accuracy
+    # TODO: add the ability to check the segmented regions with their average intensities in the original image
+    # TODO: add ellipse fitting to the segmented regions for filling the holes
+    # TODO: clean up the code and add comments
     main()
