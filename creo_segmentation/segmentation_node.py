@@ -1,3 +1,10 @@
+"""
+Script Name: segmentation_node.py
+Description: Interfacing script which sources the evaluation and segmentation codes for an executable outlook
+Author: Yatharth Ahuja, David Hill, Michael Gromis, Leo Mouta, Louis Plottel
+"""
+
+
 import cv2
 import numpy as np
 from creo_segment import creoSegmenter
