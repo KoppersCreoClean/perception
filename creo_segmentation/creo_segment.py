@@ -1,3 +1,9 @@
+"""
+Script Name: creo_segment.py
+Description: Functional class for performing creosote segmentaiton
+Author: Yatharth Ahuja, David Hill, Michael Gromic, Leo Mouta, Louis Plottel
+"""
+
 import numpy as np
 import cv2
 import skimage
