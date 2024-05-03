@@ -1,4 +1,8 @@
-# Description: This file contains the implementation of the performance metrics used to evaluate the performance of the model.
+"""
+Script Name: performance_metrics.py
+Description: This file contains the implementation of the performance metrics used to evaluate the performance of the model.
+Author: Yatharth Ahuja, David Hill, Michael Gromic, Leo Mouta, Louis Plottel
+"""
 
 # TODO: make sure to not include the absent cases (ground truth number = 0) in performance calculations
 
