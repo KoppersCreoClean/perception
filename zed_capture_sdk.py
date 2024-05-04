@@ -1,3 +1,9 @@
+"""
+Script Name: zed_img_capture.py
+Description: Test file for playing around with ZED camera settings using ZED SDK
+Author: Yatharth Ahuja, David Hill, Michael Gromic, Leo Mouta, Louis Plottel
+"""
+
 import pyzed.sl as sl
 
 def zed_cap_image():
