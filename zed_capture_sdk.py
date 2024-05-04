@@ -1,5 +1,5 @@
 """
-Script Name: zed_img_capture.py
+Script Name: zed_capture_sdk.py
 Description: Test file for playing around with ZED camera settings using ZED SDK
 Author: Yatharth Ahuja, David Hill, Michael Gromic, Leo Mouta, Louis Plottel
 """
