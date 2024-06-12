@@ -1,3 +1,9 @@
+"""
+Script Name: run_yolo.py
+Description: Test file for running YOLOv8 trained on drip pan block for detection
+Author: Yatharth Ahuja, David Hill, Michael Gromic, Leo Mouta, Louis Plottel
+"""
+
 from ultralytics import YOLO
 import argparse
 import cv2

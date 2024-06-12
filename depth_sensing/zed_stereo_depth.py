@@ -1,3 +1,9 @@
+"""
+Script Name: zed_stereo_depth.py
+Description: Test file for depth estimation using ZED stereo properties
+Author: Yatharth Ahuja, David Hill, Michael Gromic, Leo Mouta, Louis Plottel
+"""
+
 import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
