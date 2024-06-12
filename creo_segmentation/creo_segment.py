@@ -140,8 +140,8 @@ class creoSegmenter:
             img = img[y:y+h, x:x+w]
         
         if not if_mask: # tuned operations for the images
-            img = self.erode_image(img)
-            # img = self.dilate_image(img)
+            img = self.erode_image(img, kernel=np.ones((7, 7), np.uint8), iterations=7)
+            img = self.dilate_image(img)
         
         if if_resize: # resize the image to a specific size for easier processing
             img = cv2.resize(img, (450, 750))
@@ -242,16 +242,16 @@ class creoSegmenter:
 
         return res
     
-    def clahe_transform(self, img):
+    def clahe_transform(self, img, clipLimit=2.0, tileGridSize=(8, 8)):
         # Apply some preprocessing like histogram equalization, gamma correction, etc.
         # For example, you can try histogram equalization:
-        clahe = cv2.createCLAHE(clipLimit=1, tileGridSize=(8, 8))
+        clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=tileGridSize)
         return clahe.apply(img)
     
-    def contrast_stretching(self, img):
+    def contrast_stretching(self, img, alpha=1.5, beta=0):
         # out = cv2.addWeighted( img, contrast, img, 0, brightness)
         # output = cv2.addWeighted
-        output = cv2.convertScaleAbs(img, alpha=1, beta=0)
+        output = cv2.convertScaleAbs(img, alpha=alpha, beta=beta)
         return output    
     
     def remove_shadows(self, img):
@@ -296,19 +296,28 @@ class creoSegmenter:
     def multi_otsu_thresholding(self, image, if_get_loc=False, visualize=False):
         # original_image = image
         _, image_, delta_intensity = self.remove_shadows(image)
-        if if_get_loc:
-            image = image_
-        
-        thresholds = skimage.filters.threshold_multiotsu(image, classes=3)
-        # thresholds += int(delta_intensity) # testbed images
-        # thresholds += int(delta_intensity) # factory images
+        # if if_get_loc:
+        #     image = image_
 
-        self.creo_threshold = int(thresholds[0])
-        self.clean_threshold = int(thresholds[1])
+        # print("Delta Intensity: ", delta_intensity)
+        # Compute the Otsu thresholds        
+        thresholds = skimage.filters.threshold_multiotsu(image, classes=3)
+        # print("Thresholds: ", thresholds)
+        # thresholds -= int(delta_intensity/6) # testbed images
+        # thresholds -= int(delta_intensity) # factory images
+
+
+        self.creo_threshold = 100
+        self.clean_threshold = 170
+        # self.creo_threshold = int(thresholds[0])
+        # self.clean_threshold = int(thresholds[1]) # testbed images
         
-        # image = self.gamma_correction(image, gamma=0.6) # testbed images
-        image = self.gamma_correction(image, gamma=2.7) # factory images
-        image = self.clahe_transform(image)
+        # image = self.gamma_correction(image, gamma=0.2) # testbed images
+        image = self.gamma_correction(image, gamma=0.7) # factory images
+        # image = self.clahe_transform(image, clipLimit=2.0, tileGridSize=(8, 8))# testbed images
+        # image = self.contrast_stretching(image, alpha=1.5, beta=0) # testbed images
+        image = self.clahe_transform(image, clipLimit=4.0, tileGridSize=(8, 8))# factory images
+        # image = self.contrast_stretching(image, alpha=0.5, beta=10) # factory images
         # cv2.imshow("Original Image", original_image)
         # cv2.imshow("Gamma Transformed Image", image)
         # cv2.waitKey(0)
@@ -388,7 +397,7 @@ class creoSegmenter:
 
     # evaluate the performance of the segmentation
     def evaluate_segmentation(self, image_dir, mask_dir, number_of_images, evaluation_method="accuracy", visualize=True):
-        
+        # visualize = True
         avg_metric_values = {"creo": 0, "semi": 0, "clean": 0}
         
         switcher = {
@@ -409,10 +418,12 @@ class creoSegmenter:
         if False: # testbed images
             i = 14
             number_of_images = 20
+        # else: # factory images
+        #     i = 3# 7, 6 
+        #     number_of_images = 4
         else: # factory images
-            i = 1
+            i = 9
             number_of_images = 14
-        # i = 14
         
         while i <= number_of_images:
 
